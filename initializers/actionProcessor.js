@@ -287,32 +287,33 @@ module.exports = {
       var self = this;
       var toProcess = true;
       var callbackCount = 0;
-      self.preProcessAction(toProcess, function(toProcess){
-        
-        self.reduceParams();
-        self.validateParams();
 
-        if(self.missingParams.length > 0){
-          self.completeAction('missing_params');
-        }else if(self.validatorErrors.length > 0){
-          self.completeAction('validator_errors');
-        }else if(toProcess === true && self.connection.error === null){
-          self.actionTemplate.run(api, self.connection, function(connection, toRender){
-            callbackCount++;
-            if(callbackCount !== 1){ 
-              callbackCount = 1; 
-              self.duplicateCallbackHandler(actionDomain); 
-            }else{
-              self.connection = connection;
-              self.postProcessAction(toRender, function(toRender){
-                self.completeAction(true, toRender, actionDomain);
-              });
-            }
-          });
-        }else{
-          self.completeAction(false, true, actionDomain);
-        }
-      });
+      self.reduceParams();
+      self.validateParams();
+      if(self.missingParams.length > 0){
+        self.completeAction('missing_params');
+      }else if(self.validatorErrors.length > 0){
+        self.completeAction('validator_errors');
+      }else{
+        self.preProcessAction(toProcess, function(toProcess){
+          if(toProcess === true && self.connection.error === null){
+            self.actionTemplate.run(api, self.connection, function(connection, toRender){
+              callbackCount++;
+              if(callbackCount !== 1){ 
+                callbackCount = 1; 
+                self.duplicateCallbackHandler(actionDomain); 
+              }else{
+                self.connection = connection;
+                self.postProcessAction(toRender, function(toRender){
+                  self.completeAction(true, toRender, actionDomain);
+                });
+              }
+            });
+          }else{
+            self.completeAction(false, true, actionDomain);
+          }
+        });
+      } 
     }
 
     next();
